@@ -1,0 +1,57 @@
+import os
+import base64
+import json
+import csv
+import psycopg2
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+
+# Set up Gmail API credentials (you'll need to create these)
+# ...
+
+def get_gmail_service():
+    # Initialize Gmail API service
+    creds = Credentials.from_authorized_user_file("credentials.json", ["https://www.googleapis.com/auth/gmail.readonly"])
+    service = build("gmail", "v1", credentials=creds)
+    return service
+
+def get_csv_attachments(service):
+    # Retrieve emails with subject "create a table"
+    # Extract attachments (if any) and save to a local directory or S3 bucket
+    # ...
+
+def create_redshift_table(csv_file_path):
+    # Read the first row of the CSV file to determine column names and data types
+    with open(csv_file_path, "r") as csv_file:
+        reader = csv.reader(csv_file)
+        header_row = next(reader)
+
+    # Connect to Redshift (update with your connection details)
+    conn = psycopg2.connect(
+        host="your-redshift-host",
+        dbname="your-database-name",
+        user="your-username",
+        password="your-password",
+        port=5439,
+    )
+
+    # Create a Redshift table dynamically based on the CSV header
+    create_table_sql = f"CREATE TABLE IF NOT EXISTS my_table ({', '.join(header_row)});"
+    with conn.cursor() as cur:
+        cur.execute(create_table_sql)
+        conn.commit()
+
+    # Load data from CSV into the Redshift table
+    copy_sql = f"COPY my_table FROM 's3://your-s3-bucket/{os.path.basename(csv_file_path)}' CREDENTIALS 'aws_access_key_id=your-access-key-id;aws_secret_access_key=your-secret-access-key' CSV;"
+    with conn.cursor() as cur:
+        cur.execute(copy_sql)
+        conn.commit()
+
+    conn.close()
+
+if __name__ == "__main__":
+    gmail_service = get_gmail_service()
+    csv_attachments = get_csv_attachments(gmail_service)
+
+    for attachment in csv_attachments:
+        create_redshift_table(attachment)
