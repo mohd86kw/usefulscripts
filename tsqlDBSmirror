@@ -1,0 +1,7 @@
+-- On the Principal Server
+ALTER DATABASE YourDatabaseName
+SET PARTNER = 'TCP://MirrorServerName:PortNumber';
+
+-- On the Mirror Server
+ALTER DATABASE YourDatabaseName
+SET PARTNER = 'TCP://PrincipalServerName:PortNumber';
