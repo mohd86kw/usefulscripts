@@ -1,0 +1,25 @@
+import requests
+
+def validate_address(api_key, input_address):
+    base_url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {
+        "address": input_address,
+        "key": api_key,
+    }
+
+    response = requests.get(base_url, params=params)
+    data = response.json()
+
+    if data.get("status") == "OK":
+        # Extract the first suggested address
+        suggested_address = data["results"][0]["formatted_address"]
+        return suggested_address
+    else:
+        return "Address validation failed."
+
+if __name__ == "__main__":
+    google_api_key = "YOUR_API_KEY"
+    user_input_address = "1600 Amphitheatre Parkway, Mountain View, CA"  # Replace with your address
+
+    corrected_address = validate_address(google_api_key, user_input_address)
+    print(f"Suggested address: {corrected_address}")
