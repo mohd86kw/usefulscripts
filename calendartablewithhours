@@ -1,0 +1,25 @@
+-- Create a calendar table with hourly rows
+CREATE TABLE Calendar
+(
+    CalendarDate DATE,
+    HourOfDay INT
+);
+
+-- Populate the table with hourly data
+DECLARE @StartDate DATE = '2020-01-01';
+DECLARE @EndDate DATE = '2030-12-31';
+
+-- Generate hours from 00:00 to 23:00
+WITH Hours AS
+(
+    SELECT TOP (24) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS Hour
+    FROM sys.all_columns
+)
+INSERT INTO Calendar (CalendarDate, HourOfDay)
+SELECT DATEADD(HOUR, Hour, @StartDate), Hour
+FROM Hours
+CROSS JOIN (SELECT TOP (DATEDIFF(DAY, @StartDate, @EndDate) + 1) 1 AS n FROM sys.all_columns) AS Days;
+
+-- Optional: Add indexes or constraints as needed
+-- CREATE INDEX IX_Calendar_Date ON Calendar (CalendarDate);
+-- ALTER TABLE Calendar ADD CONSTRAINT PK_Calendar PRIMARY KEY (CalendarDate, HourOfDay);
