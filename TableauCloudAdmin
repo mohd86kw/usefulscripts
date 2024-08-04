@@ -1,0 +1,32 @@
+import tableauserverclient as TSC
+from datetime import datetime, timedelta
+
+def deactivate_inactive_users(server_url, username, password):
+    # Initialize Tableau Server connection
+    tableau_auth = TSC.TableauAuth(username, password)
+    server = TSC.Server(server_url)
+
+    with server.auth.sign_in(tableau_auth):
+        # Get all users
+        all_users, _ = server.users.get()
+
+        # Define the threshold for inactivity (e.g., 14 days)
+        inactive_threshold = datetime.now() - timedelta(days=14)
+
+        for user in all_users:
+            if user._last_login is None or user._last_login < inactive_threshold:
+                # Set user status to unlicensed
+                user.site_role = TSC.UserSiteRole.Unlicensed
+                server.users.update(user)
+
+                if user._last_login is None:
+                    print(f"User {user.name} (never logged in) set to unlicensed.")
+                else:
+                    print(f"User {user.name} (last login: {user._last_login}) set to unlicensed.")
+
+if __name__ == "__main__":
+    server_url = "https://your-tableau-server-url"  # Replace with your Tableau Server URL
+    username = "your_username"  # Replace with your Tableau username
+    password = "your_password"  # Replace with your Tableau password
+
+    deactivate_inactive_users(server_url, username, password)
